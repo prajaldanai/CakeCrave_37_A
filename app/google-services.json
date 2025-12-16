@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "444899758564",
+    "firebase_url": "https://cakecrave-69515-default-rtdb.firebaseio.com",
+    "project_id": "cakecrave-69515",
+    "storage_bucket": "cakecrave-69515.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:444899758564:android:554791dd73450d5c3b77f1",
+        "android_client_info": {
+          "package_name": "com.example.cakecrave"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAR0L5y63YjYBLFYJYxS6sqyw9twoj09ug"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
