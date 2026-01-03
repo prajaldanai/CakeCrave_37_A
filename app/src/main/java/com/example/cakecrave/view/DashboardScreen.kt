@@ -1,24 +1,55 @@
 package com.example.cakecrave.view
 
-// ================= IMPORTS =================
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.example.cakecrave.navigation.Routes
+import com.example.cakecrave.viewmodel.FavoritesViewModel
 import com.example.cakecrave.viewmodel.ProfileViewModel
 import com.example.cakecrave.viewmodel.ProductViewModel
+import com.google.firebase.auth.FirebaseAuth
 
-// ================= SCREEN =================
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(
+    navController: NavHostController,
+    favoritesViewModel: FavoritesViewModel
+) {
 
-    // 🔥 ViewModels (shared inside Dashboard)
+    // 🔐 Auth guard
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    if (currentUser == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Please login to continue")
+        }
+        return
+    }
+
+    // ✅ ViewModels (unchanged)
     val profileVM: ProfileViewModel = viewModel()
     val productVM: ProductViewModel = viewModel()
 
-    val profile = profileVM.profile
+    // ✅ Load profile AFTER UI starts
+    LaunchedEffect(Unit) {
+        profileVM.loadProfile()
+    }
+
     var selectedTab by remember { mutableStateOf(0) }
+
+    val message by productVM.message.collectAsState()
+    LaunchedEffect(message) {
+        if (message.contains("success", ignoreCase = true)) {
+            selectedTab = 0
+            productVM.clearMessage()
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -27,12 +58,12 @@ fun DashboardScreen() {
                 onTabSelected = { selectedTab = it }
             )
         }
-    ) { innerPadding ->
+    ) { padding ->
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(padding)
         ) {
 
             when (selectedTab) {
@@ -42,34 +73,35 @@ fun DashboardScreen() {
                     Column(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        DashboardHeader(
-                            userName = profile.name.ifBlank { "User" },
-                            photoUrl = profile.photoUrl
-                        )
+                        DashboardHeader(profileVM = profileVM)
 
-                        // ✅ FIX: PASS productVM
                         HomeContent(
                             productVM = productVM,
-                            modifier = Modifier.fillMaxSize()
+                            favoritesViewModel = favoritesViewModel, // ✅ PASS HERE
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
                         )
                     }
                 }
 
                 // ================= ADD PRODUCT =================
                 1 -> {
-                    AddProductScreen(
-                        productVM = productVM
-                    )
+                    AddProductScreen(productVM = productVM)
                 }
 
                 // ================= FAVORITES =================
                 2 -> {
-                    PlaceholderScreen("Favorite Screen")
+                    // ✅ Navigate to Favorites screen
+                    LaunchedEffect(Unit) {
+                        navController.navigate(Routes.FAVORITES)
+                    }
                 }
 
                 // ================= ACCOUNT =================
                 3 -> {
                     AccountScreen(
+                        onBack = null,
                         profileViewModel = profileVM
                     )
                 }

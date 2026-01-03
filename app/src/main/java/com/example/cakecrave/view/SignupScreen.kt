@@ -19,7 +19,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,19 +30,29 @@ import com.example.cakecrave.viewmodel.AuthViewModel
 fun SignupScreen(
     viewModel: AuthViewModel,
     onSignupSuccess: () -> Unit,
-    onLoginClick: () -> Unit
+    onLoginClick: () -> Unit = {}
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
+    // ✅ Observe signup/login success
+    val loginSuccess by viewModel.loginSuccess.collectAsState()
+
+    // 🔥 SAFE NAVIGATION
+    LaunchedEffect(loginSuccess) {
+        if (loginSuccess) {
+            Toast.makeText(context, "Account created successfully", Toast.LENGTH_SHORT).show()
+            onSignupSuccess()
+            viewModel.resetLoginState()
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // 🔹 Background Image
         Image(
             painter = painterResource(id = R.drawable.login_bg),
             contentDescription = null,
@@ -51,7 +60,6 @@ fun SignupScreen(
             contentScale = ContentScale.FillHeight
         )
 
-        // 🔹 Overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -66,12 +74,12 @@ fun SignupScreen(
                 )
         )
 
-        // 🔹 CONTENT
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
-                .navigationBarsPadding(),
+                .navigationBarsPadding()
+                .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -83,17 +91,17 @@ fun SignupScreen(
             ) {
                 Text(
                     text = "CakeCrave",
-                    fontSize = 38.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold,
                     color = ChocolateBrown
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "Sign Up",
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Medium,
                     color = ChocolateBrown
                 )
             }
@@ -101,73 +109,44 @@ fun SignupScreen(
             // ================= FORM =================
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-                SignupField("Name", name) { name = it }
-                Spacer(modifier = Modifier.height(14.dp))
+                InputField("Full name", name) { name = it }
+                Spacer(modifier = Modifier.height(12.dp))
+                InputField("Email address", email) { email = it }
+                Spacer(modifier = Modifier.height(12.dp))
+                PasswordField("Password", password) { password = it }
+                Spacer(modifier = Modifier.height(12.dp))
+                PasswordField("Confirm password", confirmPassword) { confirmPassword = it }
 
-                SignupField("Email address", email) { email = it }
-                Spacer(modifier = Modifier.height(14.dp))
-
-                SignupField("Password", password, true) { password = it }
-                Spacer(modifier = Modifier.height(14.dp))
-
-                SignupField("Confirm Password", confirmPassword, true) {
-                    confirmPassword = it
-                }
-
-                Spacer(modifier = Modifier.height(22.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
-                    enabled = !isLoading,
                     onClick = {
-                        if (isLoading) return@Button
-                        isLoading = true
-
                         when {
                             name.isBlank() || email.isBlank() ||
                                     password.isBlank() || confirmPassword.isBlank() -> {
-                                toast(context, "All fields are required")
-                                isLoading = false
+                                Toast.makeText(context, "All fields are required", Toast.LENGTH_SHORT).show()
                             }
 
                             !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                                toast(context, "Enter a valid email address")
-                                isLoading = false
+                                Toast.makeText(context, "Enter a valid email address", Toast.LENGTH_SHORT).show()
                             }
 
                             password.length < 6 -> {
-                                toast(context, "Password must be at least 6 characters")
-                                isLoading = false
+                                Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
                             }
 
                             password != confirmPassword -> {
-                                toast(context, "Passwords do not match")
-                                isLoading = false
+                                Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
                             }
 
                             else -> {
                                 viewModel.signup(
-                                    name = name,              // ✅ FIXED
+                                    name = name,
                                     email = email,
                                     password = password,
                                     confirmPassword = confirmPassword,
-                                    onSuccess = {
-                                        toast(
-                                            context,
-                                            "Account created successfully. Please log in."
-                                        )
-
-                                        // clear fields
-                                        name = ""
-                                        email = ""
-                                        password = ""
-                                        confirmPassword = ""
-
-                                        isLoading = false
-                                        onSignupSuccess()
-                                    },
-                                    onError = {
-                                        toast(context, it)
-                                        isLoading = false
+                                    onError = { error ->
+                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
                                     }
                                 )
                             }
@@ -179,32 +158,21 @@ fun SignupScreen(
                     shape = RoundedCornerShape(50.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = OrangeBtn)
                 ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            strokeWidth = 2.dp,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    } else {
-                        Text(
-                            text = "Create Account",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(22.dp))
-
-                Row {
                     Text(
-                        text = "Already have an account? ",
+                        text = "Create account",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Row {
+                    Text("Already have an account? ", color = ChocolateBrown)
                     Text(
-                        text = "Log in",
-                        color = Color.White,
+                        text = "Login",
+                        color = ChocolateBrown,
                         fontWeight = FontWeight.Bold,
                         textDecoration = TextDecoration.Underline,
                         modifier = Modifier.clickable { onLoginClick() }
@@ -215,21 +183,19 @@ fun SignupScreen(
     }
 }
 
+/* ----------------- REUSABLE FIELDS ----------------- */
+
 @Composable
-private fun SignupField(
-    label: String,
+private fun InputField(
+    placeholder: String,
     value: String,
-    isPassword: Boolean = false,
-    onChange: (String) -> Unit
+    onValueChange: (String) -> Unit
 ) {
     OutlinedTextField(
         value = value,
-        onValueChange = onChange,
-        placeholder = { Text(label, color = HintBrown) },
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, color = HintBrown) },
         singleLine = true,
-        visualTransformation =
-            if (isPassword) PasswordVisualTransformation()
-            else VisualTransformation.None,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp)),
@@ -244,6 +210,28 @@ private fun SignupField(
     )
 }
 
-private fun toast(context: android.content.Context, msg: String) {
-    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+@Composable
+private fun PasswordField(
+    placeholder: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, color = HintBrown) },
+        singleLine = true,
+        visualTransformation = PasswordVisualTransformation(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp)),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Color.Transparent,
+            unfocusedBorderColor = Color.Transparent,
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White,
+            focusedTextColor = ChocolateBrown,
+            unfocusedTextColor = ChocolateBrown
+        )
+    )
 }

@@ -3,49 +3,42 @@ package com.example.cakecrave.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import com.example.cakecrave.model.ProductModel
-import com.google.firebase.database.*
-import com.google.firebase.storage.FirebaseStorage
+import com.example.cakecrave.repository.ProductRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class ProductViewModel : ViewModel() {
 
-    // ================= FIREBASE =================
-    private val dbRef =
-        FirebaseDatabase.getInstance().reference.child("products")
+    private val repository = ProductRepository()
 
-    private val storageRef =
-        FirebaseStorage.getInstance().reference.child("product_images")
-
-    // ================= STATE =================
+    // ================= PRODUCTS =================
     private val _products = MutableStateFlow<List<ProductModel>>(emptyList())
     val products: StateFlow<List<ProductModel>> = _products
 
+    // ================= MESSAGE =================
+    private val _message = MutableStateFlow("")
+    val message: StateFlow<String> = _message
+
     init {
-        observeProducts()
+        repository.observeProducts { list ->
+            _products.value = list
+        }
     }
 
-    // ================= OBSERVE PRODUCTS =================
-    private fun observeProducts() {
-        dbRef.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
+    // ================= IMAGE UPLOAD (FIXED) =================
+    fun uploadImage(
+        imageUri: Uri?,
+        onResult: (String?) -> Unit
+    ) {
+        if (imageUri == null) {
+            onResult(null)
+            return
+        }
 
-                val list = mutableListOf<ProductModel>()
-
-                for (child in snapshot.children) {
-                    val product = child.getValue(ProductModel::class.java)
-                    if (product != null) {
-                        list.add(product)
-                    }
-                }
-
-                _products.value = list
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // log if needed
-            }
-        })
+        // ✅ CORRECT CALL — EXACT MATCH WITH REPOSITORY
+        repository.uploadImage(imageUri) { url ->
+            onResult(url)
+        }
     }
 
     // ================= ADD PRODUCT =================
@@ -54,53 +47,36 @@ class ProductViewModel : ViewModel() {
         price: Double,
         description: String,
         category: String,
-        imageUri: Uri
+        imageUrl: String
     ) {
-        val id = dbRef.push().key ?: return
+        if (name.isBlank() || imageUrl.isBlank()) {
+            _message.value = "Please fill all required fields"
+            return
+        }
 
-        val imageRef = storageRef.child("$id.jpg")
+        repository.addProduct(
+            name = name,
+            price = price,
+            description = description,
+            category = category,
+            imageUrl = imageUrl
+        )
 
-        imageRef.putFile(imageUri)
-            .addOnSuccessListener {
-                imageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-
-                    val product = ProductModel(
-                        id = id,
-                        name = name,
-                        price = price,
-                        description = description,
-                        category = category.lowercase(),
-                        imageUrl = downloadUrl.toString()
-                    )
-
-                    // 🔥 THIS CREATES /products IN DATABASE
-                    dbRef.child(id).setValue(product)
-                }
-            }
-            .addOnFailureListener {
-                // 🔴 SAFETY FALLBACK (IMPORTANT)
-                val product = ProductModel(
-                    id = id,
-                    name = name,
-                    price = price,
-                    description = description,
-                    category = category.lowercase(),
-                    imageUrl = ""
-                )
-
-                dbRef.child(id).setValue(product)
-            }
+        _message.value = "Product added successfully"
     }
 
-    // ================= DELETE PRODUCT =================
-    fun deleteProduct(product: ProductModel) {
-        dbRef.child(product.id).removeValue()
+    // ================= UPDATE =================
+    fun updateProduct(product: ProductModel) {
+        repository.updateProduct(product)
+    }
 
-        if (product.imageUrl.isNotBlank()) {
-            FirebaseStorage
-                .getInstance()
-                .getReferenceFromUrl(product.imageUrl)
-                .delete()
-        }
+    // ================= DELETE =================
+    fun deleteProduct(productId: String) {
+        repository.deleteProduct(productId)
+        _message.value = "Product deleted"
+    }
+
+    fun clearMessage() {
+        _message.value = ""
     }
 }

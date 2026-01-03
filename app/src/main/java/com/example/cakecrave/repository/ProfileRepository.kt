@@ -1,56 +1,65 @@
 package com.example.cakecrave.repository
 
+import android.content.Context
+import android.database.Cursor
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import android.provider.OpenableColumns
+import com.cloudinary.Cloudinary
+import com.cloudinary.utils.ObjectUtils
 import com.example.cakecrave.model.UserProfile
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
+import java.io.InputStream
+import java.util.concurrent.Executors
 
 class ProfileRepository {
 
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
-    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+    // ================= FIREBASE =================
+    private val db =
+        FirebaseDatabase.getInstance()
+            .reference
+            .child("profiles")
 
-    private fun uid(): String = auth.currentUser?.uid ?: ""
+    // ================= CLOUDINARY =================
+    private val cloudinary = Cloudinary(
+        mapOf(
+            "cloud_name" to "dcevekywh",
+            "api_key" to "829685644631527",
+            "api_secret" to "i_zTrr8kRBPzsMs-wX2PDygOPHk"
+        )
+    )
 
-    private fun userRef(): DatabaseReference =
-        database.getReference("users").child(uid())
-
+    // ================= OBSERVE PROFILE =================
     fun observeProfile(
+        userId: String,
         onResult: (UserProfile) -> Unit,
-        onError: (String) -> Unit = {}
+        onError: (String) -> Unit
     ) {
-        if (uid().isBlank()) {
-            onError("User not logged in")
-            return
-        }
+        db.child(userId)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
 
-        userRef().addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val profile =
-                    snapshot.getValue(UserProfile::class.java) ?: UserProfile()
-                onResult(profile)
-            }
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val profile =
+                        snapshot.getValue(UserProfile::class.java)
+                            ?: UserProfile()
+                    onResult(profile)
+                }
 
-            override fun onCancelled(error: DatabaseError) {
-                onError(error.message)
-            }
-        })
+                override fun onCancelled(error: DatabaseError) {
+                    onError(error.message)
+                }
+            })
     }
 
+    // ================= SAVE PROFILE =================
     fun saveProfile(
+        userId: String,
         profile: UserProfile,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
-        if (uid().isBlank()) {
-            onError("User not logged in")
-            return
-        }
-
-        userRef()
+        db.child(userId)
             .setValue(profile)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener {
@@ -58,32 +67,66 @@ class ProfileRepository {
             }
     }
 
-    fun uploadProfilePhoto(
+    // ================= UPLOAD PROFILE IMAGE =================
+    fun uploadProfileImage(
+        context: Context,
         imageUri: Uri,
-        onSuccess: (String) -> Unit,
-        onError: (String) -> Unit
+        callback: (String?) -> Unit
     ) {
-        val userId = uid()
-        if (userId.isBlank()) {
-            onError("User not logged in")
-            return
+        val executor = Executors.newSingleThreadExecutor()
+
+        executor.execute {
+            try {
+                val inputStream: InputStream? =
+                    context.contentResolver.openInputStream(imageUri)
+
+                if (inputStream == null) {
+                    Handler(Looper.getMainLooper()).post { callback(null) }
+                    return@execute
+                }
+
+                val fileName =
+                    getFileNameFromUri(context, imageUri)?.substringBeforeLast(".")
+                        ?: "profile_image"
+
+                val response = cloudinary.uploader().upload(
+                    inputStream,
+                    ObjectUtils.asMap(
+                        "public_id", "profiles/$fileName",
+                        "resource_type", "image"
+                    )
+                )
+
+                var imageUrl = response["url"] as String?
+                imageUrl = imageUrl?.replace("http://", "https://")
+
+                Handler(Looper.getMainLooper()).post {
+                    callback(imageUrl)
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Handler(Looper.getMainLooper()).post {
+                    callback(null)
+                }
+            }
         }
+    }
 
-        val photoRef: StorageReference =
-            storage.reference.child("profile_photos/$userId.jpg")
+    // ================= HELPER =================
+    private fun getFileNameFromUri(context: Context, uri: Uri): String? {
+        var fileName: String? = null
+        val cursor: Cursor? =
+            context.contentResolver.query(uri, null, null, null, null)
 
-        photoRef.putFile(imageUri)
-            .addOnSuccessListener {
-                photoRef.downloadUrl
-                    .addOnSuccessListener { uri ->
-                        onSuccess(uri.toString())
-                    }
-                    .addOnFailureListener {
-                        onError(it.message ?: "Failed to get download URL")
-                    }
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val index = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (index != -1) {
+                    fileName = it.getString(index)
+                }
             }
-            .addOnFailureListener {
-                onError(it.message ?: "Photo upload failed")
-            }
+        }
+        return fileName
     }
 }

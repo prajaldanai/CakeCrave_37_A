@@ -1,60 +1,177 @@
 package com.example.cakecrave.view
 
-// ================= IMPORTS =================
+import android.widget.Toast
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import com.example.cakecrave.model.FavoriteItem
+import com.example.cakecrave.model.ProductModel
+import com.example.cakecrave.viewmodel.FavoritesViewModel
 import com.example.cakecrave.viewmodel.ProductViewModel
 
-// ================= HOME CONTENT =================
 @Composable
 fun HomeContent(
     productVM: ProductViewModel,
+    favoritesViewModel: FavoritesViewModel,   // ✅ ADDED
     modifier: Modifier = Modifier
 ) {
-
-    // 🔥 Observe products from ViewModel
     val products by productVM.products.collectAsState()
-
-    // Category state
     var selectedCategory by remember { mutableStateOf("cake") }
 
-    // Filter products by category
-    val filteredProducts = products.filter {
-        it.category.equals(selectedCategory, ignoreCase = true)
+    val filteredProducts = remember(products, selectedCategory) {
+        products.filter { it.category.equals(selectedCategory, ignoreCase = true) }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(bottom = 80.dp)
     ) {
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // ================= CATEGORY HEADER =================
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Column {
+                Spacer(modifier = Modifier.height(16.dp))
+                CategorySection(
+                    selected = selectedCategory,
+                    onSelect = { selectedCategory = it }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
 
-        // ================= CATEGORY SECTION =================
-        CategorySection(
-            selected = selectedCategory,
-            onSelect = { selectedCategory = it }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // ================= PRODUCT LIST =================
+        // ================= EMPTY STATE =================
         if (filteredProducts.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "No products found")
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 80.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No products found")
+                }
             }
         } else {
-            ProductGridSection(
-                products = filteredProducts
+
+            // ================= PRODUCT GRID =================
+            items(
+                items = filteredProducts,
+                key = { it.id }
+            ) { product ->
+                ProductGridCard(
+                    product = product,
+                    favoritesViewModel = favoritesViewModel   // ✅ PASS DOWN
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProductGridCard(
+    product: ProductModel,
+    favoritesViewModel: FavoritesViewModel   // ✅ ADDED
+) {
+    val context = LocalContext.current
+
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(6.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF2EFF5))
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+
+            // ❤️ DOUBLE TAP TO FAVORITE
+            AsyncImage(
+                model = product.imageUrl.takeIf { it.isNotBlank() },
+                contentDescription = product.name,
+                modifier = Modifier
+                    .height(120.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .combinedClickable(
+                        onClick = {},
+                        onDoubleClick = {
+                            favoritesViewModel.addToFavorites(
+                                FavoriteItem(
+                                    productId = product.id,
+                                    name = product.name,
+                                    price = product.price,
+                                    imageUrl = product.imageUrl
+                                )
+                            )
+
+                            Toast.makeText(
+                                context,
+                                "Added to favorites ❤️",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    ),
+                contentScale = ContentScale.Crop
             )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = product.name,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                Text(
+                    text = "Rs. ${product.price}",
+                    color = Color(0xFFFF7A00),
+                    fontWeight = FontWeight.Bold
+                )
+
+                FloatingActionButton(
+                    onClick = {
+                        // TODO: Add to cart
+                    },
+                    modifier = Modifier.size(34.dp),
+                    containerColor = Color(0xFFFF7A00),
+                    elevation = FloatingActionButtonDefaults.elevation(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add",
+                        tint = Color.White
+                    )
+                }
+            }
         }
     }
 }

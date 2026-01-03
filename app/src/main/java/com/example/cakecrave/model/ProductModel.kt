@@ -6,5 +6,5 @@ data class ProductModel(
     val price: Double = 0.0,
     val description: String = "",
     val category: String = "",
-    val imageUrl: String = ""
+    val imageUrl: String = ""   // ✅ URL ONLY
 )

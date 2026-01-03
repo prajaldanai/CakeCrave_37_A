@@ -5,5 +5,5 @@ data class UserProfile(
     val phone: String = "",
     val dob: String = "",
     val country: String = "",
-    val photoUrl: String = ""   // ✅ NEW
+    val photoUrl: String = ""
 )

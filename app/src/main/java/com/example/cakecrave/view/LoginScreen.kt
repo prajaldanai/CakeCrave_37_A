@@ -38,6 +38,18 @@ fun LoginScreen(
 
     val context = LocalContext.current
 
+    // ✅ Observe login state safely
+    val loginSuccess by viewModel.loginSuccess.collectAsState()
+
+    // 🔥 SAFE NAVIGATION (NO CRASH)
+    LaunchedEffect(loginSuccess) {
+        if (loginSuccess) {
+            Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
+            onLoginSuccess()
+            viewModel.resetLoginState()
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
 
         // 🔹 Background image
@@ -48,7 +60,7 @@ fun LoginScreen(
             contentScale = ContentScale.FillHeight
         )
 
-        // 🔹 Warm overlay (unchanged)
+        // 🔹 Warm overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -74,7 +86,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
 
-            // ================= TOP TITLE SECTION =================
+            // ================= TOP TITLE =================
             Column(
                 modifier = Modifier.padding(top = 60.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -96,7 +108,7 @@ fun LoginScreen(
                 )
             }
 
-            // ================= BOTTOM FORM SECTION =================
+            // ================= FORM =================
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
                 OutlinedTextField(
@@ -160,23 +172,16 @@ fun LoginScreen(
                             email.isBlank() || password.isBlank() -> {
                                 Toast.makeText(context, "All fields are required", Toast.LENGTH_SHORT).show()
                             }
-
                             !isValidEmail(email) -> {
                                 Toast.makeText(context, "Enter a valid email address", Toast.LENGTH_SHORT).show()
                             }
-
                             password.length < 6 -> {
                                 Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
                             }
-
                             else -> {
                                 viewModel.login(
                                     email = email,
                                     password = password,
-                                    onSuccess = {
-                                        Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
-                                        onLoginSuccess()
-                                    },
                                     onError = { error ->
                                         Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
                                     }

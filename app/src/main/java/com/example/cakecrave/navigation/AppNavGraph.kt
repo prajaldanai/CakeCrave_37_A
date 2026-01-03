@@ -1,27 +1,26 @@
 package com.example.cakecrave.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.cakecrave.view.*
+import com.example.cakecrave.view.favorites.FavoritesScreen
 import com.example.cakecrave.viewmodel.AuthViewModel
+import com.example.cakecrave.viewmodel.FavoritesViewModel
 
 @Composable
 fun AppNavGraph(
-    navController: NavHostController,
-    authViewModel: AuthViewModel
+    navController: NavHostController
 ) {
+    // ✅ Auth VM (shared across auth screens)
+    val authViewModel: AuthViewModel = viewModel()
 
     NavHost(
         navController = navController,
-        startDestination = Routes.DASHBOARD
+        startDestination = Routes.WELCOME
     ) {
-
-        // ================= DASHBOARD =================
-        composable(Routes.DASHBOARD) {
-            DashboardScreen()   // ✅ NO PARAMETERS
-        }
 
         // ================= WELCOME =================
         composable(Routes.WELCOME) {
@@ -60,7 +59,7 @@ fun AppNavGraph(
                     }
                 },
                 onLoginClick = {
-                    navController.navigate(Routes.LOGIN)
+                    navController.popBackStack()
                 }
             )
         }
@@ -86,6 +85,30 @@ fun AppNavGraph(
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        // ================= DASHBOARD =================
+        composable(Routes.DASHBOARD) {
+
+            // ✅ Favorites VM CREATED AFTER LOGIN
+            val favoritesViewModel: FavoritesViewModel = viewModel()
+
+            DashboardScreen(
+                navController = navController,
+                favoritesViewModel = favoritesViewModel
+            )
+        }
+
+        // ================= FAVORITES =================
+        composable(Routes.FAVORITES) {
+
+            // ✅ SAME Favorites VM INSTANCE (shared)
+            val favoritesViewModel: FavoritesViewModel = viewModel()
+
+            FavoritesScreen(
+                navController = navController,          // ✅ FIX: PASS NAV CONTROLLER
+                favoritesViewModel = favoritesViewModel // ✅ KEEP THIS
             )
         }
     }

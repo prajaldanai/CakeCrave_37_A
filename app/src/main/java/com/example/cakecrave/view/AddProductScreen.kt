@@ -1,220 +1,300 @@
 package com.example.cakecrave.view
 
-// ---------- Android ----------
-import android.content.Intent
 import android.net.Uri
-
-// ---------- Activity Result ----------
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-
-// ---------- Compose ----------
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
-
-// ---------- Layout ----------
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-
-// ---------- Material ----------
-import androidx.compose.material3.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-
-// ---------- Image ----------
-import coil.compose.AsyncImage
-
-// ---------- Context ----------
-import androidx.compose.ui.platform.LocalContext
-
-// ---------- ViewModel ----------
-import com.example.cakecrave.viewmodel.ProductViewModel
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.example.cakecrave.model.ProductModel
+import com.example.cakecrave.viewmodel.ProductViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddProductScreen(
-    productVM: ProductViewModel
-) {
+fun AddProductScreen(productVM: ProductViewModel) {
 
-    val context = LocalContext.current
-
-    // ================= FORM STATE =================
-    var name by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("cake") }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
-
-    // ================= OBSERVE PRODUCTS =================
     val products by productVM.products.collectAsState()
+    var showSheet by remember { mutableStateOf(false) }
+    var editProduct by remember { mutableStateOf<ProductModel?>(null) }
 
-    // ================= IMAGE PICKER (PERSISTENT) =================
-    val imagePicker =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.OpenDocument()
-        ) { uri ->
-            uri?.let {
-                context.contentResolver.takePersistableUriPermission(
-                    it,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-                imageUri = it
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                editProduct = null
+                showSheet = true
+            }) {
+                Icon(Icons.Default.Add, contentDescription = null)
             }
         }
+    ) { padding ->
 
-    LazyColumn(
+        LazyColumn(
+            modifier = Modifier
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(products, key = { it.id }) { product ->
+                ProductRow(
+                    product = product,
+                    onDelete = { productVM.deleteProduct(product.id) },
+                    onEdit = {
+                        editProduct = product
+                        showSheet = true
+                    }
+                )
+            }
+        }
+    }
+
+    if (showSheet) {
+        ModalBottomSheet(onDismissRequest = { showSheet = false }) {
+            AddEditProductSheet(
+                productVM = productVM,
+                product = editProduct,
+                onClose = { showSheet = false }
+            )
+        }
+    }
+}
+
+/* ================= ADD / EDIT SHEET ================= */
+
+@Composable
+private fun AddEditProductSheet(
+    productVM: ProductViewModel,
+    product: ProductModel?,
+    onClose: () -> Unit
+) {
+    var name by remember { mutableStateOf(product?.name ?: "") }
+    var price by remember { mutableStateOf(product?.price?.toString() ?: "") }
+    var description by remember { mutableStateOf(product?.description ?: "") }
+    var category by remember { mutableStateOf(product?.category ?: "cake") }
+
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var uploading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    val imagePickerLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+            selectedImageUri = it
+        }
+
+    Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
 
-        // ================= ADD PRODUCT FORM =================
-        item {
-
-            Text(
-                text = "Add Product",
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            Button(
-                onClick = { imagePicker.launch(arrayOf("image/*")) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (imageUri == null) "Pick Image" else "Image Selected")
-            }
-
-            imageUri?.let {
-                AsyncImage(
-                    model = it,
-                    contentDescription = "Selected Image",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(160.dp)
-                )
-            }
-
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Product Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = price,
-                onValueChange = { price = it },
-                label = { Text("Price") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3
-            )
-
-            // ================= CATEGORY =================
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                CategoryRadio("cake", category) { category = it }
-                CategoryRadio("donut", category) { category = it }
-                CategoryRadio("cookie", category) { category = it }
-            }
-
-            // ================= ADD BUTTON =================
-            Button(
-                onClick = {
-
-                    if (
-                        name.isBlank() ||
-                        price.isBlank() ||
-                        description.isBlank() ||
-                        imageUri == null
-                    ) return@Button
-
-                    productVM.addProduct(
-                        name = name,
-                        price = price.toDouble(),
-                        description = description,
-                        category = category.lowercase(),
-                        imageUri = imageUri!!
-                    )
-
-                    // Reset form
-                    name = ""
-                    price = ""
-                    description = ""
-                    category = "cake"
-                    imageUri = null
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Add Product")
-            }
+        /* -------- IMAGE -------- */
+        Button(onClick = { imagePickerLauncher.launch("image/*") }) {
+            Text("Pick Image")
         }
 
-        // ================= PRODUCT LIST BELOW =================
-        items(products) { product ->
-            ProductRow(
-                product = product,
-                onDelete = { productVM.deleteProduct(product) }
-            )
-        }
-    }
-}
-
-// ================= PRODUCT ROW =================
-@Composable
-private fun ProductRow(
-    product: ProductModel,
-    onDelete: () -> Unit
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
+        val previewImage = selectedImageUri ?: product?.imageUrl
+        previewImage?.let {
             AsyncImage(
-                model = product.imageUrl,
-                contentDescription = product.name,
-                modifier = Modifier.size(64.dp)
-            )
-
-            Column(
+                model = it,
+                contentDescription = null,
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp)
-            ) {
-                Text(product.name)
-                Text("Rs ${product.price}")
-                Text(product.category)
-            }
+                    .fillMaxWidth()
+                    .height(160.dp),
+                contentScale = ContentScale.Crop
+            )
+        }
 
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
+        /* -------- CATEGORY SELECTOR -------- */
+        Text("Category", fontWeight = FontWeight.Bold)
+
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            CategoryChip("Cake", "cake", category) { category = it }
+            CategoryChip("Donut", "donut", category) { category = it }
+            CategoryChip("Cookie", "cookie", category) { category = it }
+        }
+
+        /* -------- INPUTS -------- */
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = price,
+            onValueChange = { price = it },
+            label = { Text("Price") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Description") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        /* -------- SAVE -------- */
+        Button(
+            enabled = !uploading,
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                val priceValue = price.toDoubleOrNull()
+                if (priceValue == null) {
+                    error = "Invalid price"
+                    return@Button
+                }
+
+                if (selectedImageUri != null) {
+                    uploading = true
+                    productVM.uploadImage(selectedImageUri) { url ->
+                        uploading = false
+                        if (url != null) {
+                            saveProduct(
+                                productVM,
+                                product,
+                                name,
+                                priceValue,
+                                description,
+                                category,
+                                url
+                            )
+                            onClose()
+                        } else {
+                            error = "Image upload failed"
+                        }
+                    }
+                } else {
+                    saveProduct(
+                        productVM,
+                        product,
+                        name,
+                        priceValue,
+                        description,
+                        category,
+                        product?.imageUrl ?: ""
+                    )
+                    onClose()
+                }
             }
+        ) {
+            Text(if (uploading) "Saving..." else "Save")
+        }
+
+        error?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
         }
     }
 }
 
-// ================= CATEGORY RADIO =================
+/* ================= CATEGORY CHIP ================= */
+
 @Composable
-fun CategoryRadio(
+private fun CategoryChip(
+    label: String,
     value: String,
     selected: String,
     onSelect: (String) -> Unit
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        RadioButton(
-            selected = value == selected,
-            onClick = { onSelect(value) }
+    val isSelected = value == selected
+
+    Box(
+        modifier = Modifier
+            .background(
+                if (isSelected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.surfaceVariant,
+                RoundedCornerShape(20.dp)
+            )
+            .clickable { onSelect(value) }
+            .padding(horizontal = 18.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = label,
+            color = if (isSelected)
+                MaterialTheme.colorScheme.onPrimary
+            else
+                MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium
         )
-        Text(value.replaceFirstChar { it.uppercase() })
+    }
+}
+
+/* ================= SAVE LOGIC ================= */
+
+private fun saveProduct(
+    vm: ProductViewModel,
+    existing: ProductModel?,
+    name: String,
+    price: Double,
+    desc: String,
+    category: String,
+    imageUrl: String
+) {
+    if (existing == null) {
+        vm.addProduct(name, price, desc, category, imageUrl)
+    } else {
+        vm.updateProduct(
+            existing.copy(
+                name = name,
+                price = price,
+                description = desc,
+                category = category,
+                imageUrl = imageUrl
+            )
+        )
+    }
+}
+
+/* ================= PRODUCT ROW ================= */
+
+@Composable
+private fun ProductRow(
+    product: ProductModel,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
+) {
+    Card {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = product.imageUrl,
+                contentDescription = null,
+                modifier = Modifier.size(70.dp),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(product.name, fontWeight = FontWeight.Bold)
+                Text("₹ ${product.price}")
+                Text(product.category, style = MaterialTheme.typography.bodySmall)
+            }
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, null)
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, null)
+            }
+        }
     }
 }

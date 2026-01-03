@@ -7,4 +7,6 @@ object Routes {
     const val FORGOT_PASSWORD = "forgot_password"
     const val RESET_PASSWORD = "reset_password"
     const val DASHBOARD = "dashboard"
+    const val FAVORITES = "favorites" // ✅ ADD THIS
+
 }
