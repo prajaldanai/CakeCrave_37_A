@@ -21,23 +21,28 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.cakecrave.model.FavoriteItem
 import com.example.cakecrave.model.ProductModel
+import com.example.cakecrave.navigation.Routes
 import com.example.cakecrave.viewmodel.FavoritesViewModel
 import com.example.cakecrave.viewmodel.ProductViewModel
 
 @Composable
 fun HomeContent(
+    navController: NavHostController,            // ✅ ADDED
     productVM: ProductViewModel,
-    favoritesViewModel: FavoritesViewModel,   // ✅ ADDED
+    favoritesViewModel: FavoritesViewModel,
     modifier: Modifier = Modifier
 ) {
     val products by productVM.products.collectAsState()
     var selectedCategory by remember { mutableStateOf("cake") }
 
     val filteredProducts = remember(products, selectedCategory) {
-        products.filter { it.category.equals(selectedCategory, ignoreCase = true) }
+        products.filter {
+            it.category.equals(selectedCategory, ignoreCase = true)
+        }
     }
 
     LazyVerticalGrid(
@@ -81,7 +86,13 @@ fun HomeContent(
             ) { product ->
                 ProductGridCard(
                     product = product,
-                    favoritesViewModel = favoritesViewModel   // ✅ PASS DOWN
+                    favoritesViewModel = favoritesViewModel,
+                    onAddClick = {
+                        // ✅ NAVIGATE TO PRODUCT DETAILS
+                        navController.navigate(
+                            Routes.productDetail(product.id)
+                        )
+                    }
                 )
             }
         }
@@ -91,7 +102,8 @@ fun HomeContent(
 @Composable
 private fun ProductGridCard(
     product: ProductModel,
-    favoritesViewModel: FavoritesViewModel   // ✅ ADDED
+    favoritesViewModel: FavoritesViewModel,
+    onAddClick: () -> Unit                // ✅ ADDED
 ) {
     val context = LocalContext.current
 
@@ -113,7 +125,7 @@ private fun ProductGridCard(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .combinedClickable(
-                        onClick = {},
+                        onClick = {}, // keep empty (card tap)
                         onDoubleClick = {
                             favoritesViewModel.addToFavorites(
                                 FavoriteItem(
@@ -158,9 +170,7 @@ private fun ProductGridCard(
                 )
 
                 FloatingActionButton(
-                    onClick = {
-                        // TODO: Add to cart
-                    },
+                    onClick = onAddClick,     // ✅ FIXED
                     modifier = Modifier.size(34.dp),
                     containerColor = Color(0xFFFF7A00),
                     elevation = FloatingActionButtonDefaults.elevation(4.dp)

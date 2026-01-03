@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.cakecrave.model.FavoriteItem
+import com.example.cakecrave.navigation.Routes
 import com.example.cakecrave.view.BottomNavBar
 import com.example.cakecrave.viewmodel.FavoritesViewModel
 
@@ -30,13 +31,18 @@ fun FavoritesScreen(
 ) {
     val favorites by favoritesViewModel.favorites.collectAsState()
 
-    // 👇 Favorites tab index = 2
+    // 👇 Favorites tab index
     var selectedTab by remember { mutableStateOf(2) }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Favorites ❤️", fontWeight = FontWeight.Bold) }
+                title = {
+                    Text(
+                        text = "Favorites ❤️",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             )
         },
         bottomBar = {
@@ -45,10 +51,10 @@ fun FavoritesScreen(
                 onTabSelected = { index ->
                     selectedTab = index
                     when (index) {
-                        0 -> navController.navigate("dashboard")
-                        1 -> navController.navigate("dashboard") // Add product tab handled in dashboard
+                        0 -> navController.navigate(Routes.DASHBOARD)
+                        1 -> navController.navigate(Routes.DASHBOARD)
                         2 -> { /* already here */ }
-                        3 -> navController.navigate("dashboard")
+                        3 -> navController.navigate(Routes.DASHBOARD)
                     }
                 }
             )
@@ -62,7 +68,10 @@ fun FavoritesScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No favorite items yet", color = Color.Gray)
+                Text(
+                    text = "No favorite items yet",
+                    color = Color.Gray
+                )
             }
         } else {
             LazyColumn(
@@ -70,14 +79,20 @@ fun FavoritesScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                items(favorites, key = { it.productId }) { item ->
+                items(
+                    items = favorites,
+                    key = { it.productId }
+                ) { item ->
                     FavoriteItemCard(
                         item = item,
                         onDelete = {
                             favoritesViewModel.deleteFavorite(item.productId)
                         },
-                        onAddToCart = {
-                            // TODO: hook cart logic
+                        onAddClick = {
+                            // ✅ NAVIGATE TO PRODUCT DETAILS
+                            navController.navigate(
+                                Routes.productDetail(item.productId)
+                            )
                         }
                     )
                 }
@@ -90,7 +105,7 @@ fun FavoritesScreen(
 private fun FavoriteItemCard(
     item: FavoriteItem,
     onDelete: () -> Unit,
-    onAddToCart: () -> Unit
+    onAddClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -117,7 +132,10 @@ private fun FavoriteItemCard(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(item.name, fontWeight = FontWeight.Bold)
+                Text(
+                    text = item.name,
+                    fontWeight = FontWeight.Bold
+                )
                 Text(
                     text = "Rs. ${item.price}",
                     color = Color(0xFFFF7A00),
@@ -126,12 +144,16 @@ private fun FavoriteItemCard(
             }
 
             FloatingActionButton(
-                onClick = onAddToCart,
+                onClick = onAddClick, // ✅ FIXED
                 modifier = Modifier.size(34.dp),
                 containerColor = Color(0xFFFF7A00),
                 elevation = FloatingActionButtonDefaults.elevation(2.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add to cart", tint = Color.White)
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "View product",
+                    tint = Color.White
+                )
             }
 
             Spacer(modifier = Modifier.width(6.dp))

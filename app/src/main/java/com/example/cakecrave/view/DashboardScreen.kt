@@ -1,8 +1,7 @@
 package com.example.cakecrave.view
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,10 +16,11 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun DashboardScreen(
     navController: NavHostController,
+    productViewModel: ProductViewModel,      // ✅ SHARED FROM AppNavGraph
     favoritesViewModel: FavoritesViewModel
 ) {
 
-    // 🔐 Auth guard
+    // 🔐 AUTH GUARD (KEEP)
     val currentUser = FirebaseAuth.getInstance().currentUser
     if (currentUser == null) {
         Box(
@@ -32,22 +32,22 @@ fun DashboardScreen(
         return
     }
 
-    // ✅ ViewModels (unchanged)
+    // ✅ PROFILE VM (LOCAL IS OK)
     val profileVM: ProfileViewModel = viewModel()
-    val productVM: ProductViewModel = viewModel()
 
-    // ✅ Load profile AFTER UI starts
+    // 🔄 LOAD PROFILE ONCE
     LaunchedEffect(Unit) {
         profileVM.loadProfile()
     }
 
     var selectedTab by remember { mutableStateOf(0) }
 
-    val message by productVM.message.collectAsState()
+    // 🔔 PRODUCT MESSAGE HANDLING (KEEP)
+    val message by productViewModel.message.collectAsState()
     LaunchedEffect(message) {
         if (message.contains("success", ignoreCase = true)) {
             selectedTab = 0
-            productVM.clearMessage()
+            productViewModel.clearMessage()
         }
     }
 
@@ -73,11 +73,15 @@ fun DashboardScreen(
                     Column(
                         modifier = Modifier.fillMaxSize()
                     ) {
+
+                        // ✅ PROFILE HEADER BACK (PHOTO + NAME)
                         DashboardHeader(profileVM = profileVM)
 
+                        // ✅ HOME CONTENT WITH NAV
                         HomeContent(
-                            productVM = productVM,
-                            favoritesViewModel = favoritesViewModel, // ✅ PASS HERE
+                            navController = navController,
+                            productVM = productViewModel,
+                            favoritesViewModel = favoritesViewModel,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f)
@@ -87,12 +91,11 @@ fun DashboardScreen(
 
                 // ================= ADD PRODUCT =================
                 1 -> {
-                    AddProductScreen(productVM = productVM)
+                    AddProductScreen(productVM = productViewModel)
                 }
 
                 // ================= FAVORITES =================
                 2 -> {
-                    // ✅ Navigate to Favorites screen
                     LaunchedEffect(Unit) {
                         navController.navigate(Routes.FAVORITES)
                     }
