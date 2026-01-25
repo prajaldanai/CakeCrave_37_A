@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage   // ✅ FIXED (Coil 3)
+import coil3.compose.AsyncImage
 import com.example.cakecrave.viewmodel.ProfileViewModel
 
 @Composable
@@ -30,7 +30,7 @@ fun DashboardHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        // ✅ Profile Image
+        // ✅ Profile Image   profile image is added
         AsyncImage(
             model = profile.photoUrl.takeIf { it.isNotBlank() },
             contentDescription = "Profile Photo",
@@ -42,7 +42,7 @@ fun DashboardHeader(
 
         Spacer(modifier = Modifier.width(14.dp))
 
-        // ✅ Greeting Text
+        // ✅ Greeting Text green text added
         Column(
             modifier = Modifier.weight(1f)
         ) {
