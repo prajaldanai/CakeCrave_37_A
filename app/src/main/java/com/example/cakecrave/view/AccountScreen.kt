@@ -95,7 +95,7 @@ fun AccountScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // ================= HEADER =================
+                // ================= HEADER =================  header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -131,7 +131,7 @@ fun AccountScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // ================= PROFILE IMAGE =================
+                // ================= PROFILE IMAGE ================= added
                 AsyncImage(
                     model = selectedImageUri ?: photoUrl.takeIf { it.isNotBlank() },
                     contentDescription = "Profile Photo",
