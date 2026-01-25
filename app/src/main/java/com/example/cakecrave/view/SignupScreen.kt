@@ -39,7 +39,7 @@ fun SignupScreen(
 
     val context = LocalContext.current
 
-    // ✅ Observe signup/login success
+    // ✅ Observe signup/login success  login deatrures
     val loginSuccess by viewModel.loginSuccess.collectAsState()
 
     // 🔥 SAFE NAVIGATION
@@ -84,7 +84,7 @@ fun SignupScreen(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
 
-            // ================= TITLE =================
+            // ================= TITLE  main tile of the  =================
             Column(
                 modifier = Modifier.padding(top = 60.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
