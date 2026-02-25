@@ -35,7 +35,7 @@ fun DashboardScreen(
     // ✅ PROFILE VM (LOCAL IS OK)
     val profileVM: ProfileViewModel = viewModel()
 
-    // 🔄 LOAD PROFILE ONCE
+    // 🔄 LOAD PROFILE once
     LaunchedEffect(Unit) {
         profileVM.loadProfile()
     }
