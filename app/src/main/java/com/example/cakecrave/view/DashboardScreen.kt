@@ -77,7 +77,7 @@ fun DashboardScreen(
                         // ✅ PROFILE HEADER BACK (PHOTO + NAME)
                         DashboardHeader(profileVM = profileVM)
 
-                        // ✅ HOME CONTENT WITH NAV
+                        // ✅ HOME CONTENT WITH NAV buttons
                         HomeContent(
                             navController = navController,
                             productVM = productViewModel,
