@@ -42,7 +42,7 @@ fun DashboardScreen(
 
     var selectedTab by remember { mutableStateOf(0) }
 
-    // 🔔 PRODUCT MESSAGE HANDLING (KEEP)
+    //  PRODUCT MESSAGE HANDLING (KEEP)
     val message by productViewModel.message.collectAsState()
     LaunchedEffect(message) {
         if (message.contains("success", ignoreCase = true)) {
