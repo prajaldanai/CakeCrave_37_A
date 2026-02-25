@@ -16,7 +16,7 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun DashboardScreen(
     navController: NavHostController,
-    productViewModel: ProductViewModel,      // ✅ SHARED FROM AppNavGraph
+    productViewModel: ProductViewModel,      //  SHARED FROM AppNavGraph
     favoritesViewModel: FavoritesViewModel
 ) {
 
