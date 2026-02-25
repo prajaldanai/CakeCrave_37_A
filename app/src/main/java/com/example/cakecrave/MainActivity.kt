@@ -36,6 +36,7 @@ class MainActivity : ComponentActivity() {
 
                 Log.d("DEBUG_FLOW", " AppNavGraph rendered")
             }
+
         }
     }
 }

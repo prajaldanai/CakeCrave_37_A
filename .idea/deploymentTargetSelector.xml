@@ -14,9 +14,6 @@
       <SelectionState runConfigName="MainActivity (1)">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="MainActivity (7)">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="MainActivity (5)">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
@@ -36,6 +33,9 @@
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="MainActivity (6)">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="MainActivity (11)">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

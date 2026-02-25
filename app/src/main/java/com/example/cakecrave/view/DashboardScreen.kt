@@ -89,7 +89,7 @@ fun DashboardScreen(
                     }
                 }
 
-                // ================= ADD PRODUCT =================
+                // ================= ADD PRODUCT to the list  =================
                 1 -> {
                     AddProductScreen(productVM = productViewModel)
                 }
