@@ -43,6 +43,34 @@ android {
 
     // ❌ REMOVED composeOptions
     // Kotlin 2.2.20 + Compose plugin handles this automatically
+
+    // ===============================
+    // QUIETER TEST OUTPUT
+    // Show PASSED/FAILED per test + full details on failure only
+    // ===============================
+    testOptions {
+        unitTests.all {
+            it.testLogging {
+                events("passed", "failed", "skipped")
+                exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+                showExceptions = true
+                showCauses = true
+                showStackTraces = true
+                showStandardStreams = false
+            }
+            it.afterSuite(KotlinClosure2<TestDescriptor, TestResult, Unit>({ desc, result ->
+                if (desc.parent == null) {
+                    println("\n========== TEST SUMMARY ==========")
+                    println("Result : ${result.resultType}")
+                    println("Tests  : ${result.testCount}")
+                    println("Passed : ${result.successfulTestCount}")
+                    println("Failed : ${result.failedTestCount}")
+                    println("Skipped: ${result.skippedTestCount}")
+                    println("==================================\n")
+                }
+            }))
+        }
+    }
 }
 
 dependencies {
@@ -119,6 +147,20 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.11.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:runner:1.6.1")
+    androidTestImplementation("androidx.test:rules:1.6.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.6.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 }
+
+// ===============================
+// CUSTOM TASK: run tests with minimal Gradle noise
+// Usage: ./gradlew testQuiet
+// ===============================
+tasks.register("testQuiet") {
+    group = "verification"
+    description = "Runs unit tests with quiet Gradle output (PASS/FAIL + failures only)"
+    dependsOn("testDebugUnitTest")
+}
+

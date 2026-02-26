@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -118,7 +119,8 @@ fun LoginScreen(
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp)),
+                        .clip(RoundedCornerShape(20.dp))
+                        .testTag("email"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
@@ -139,7 +141,8 @@ fun LoginScreen(
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp)),
+                        .clip(RoundedCornerShape(20.dp))
+                        .testTag("password"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
@@ -191,7 +194,8 @@ fun LoginScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
+                        .height(56.dp)
+                        .testTag("loginBtn"),
                     shape = RoundedCornerShape(50.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = OrangeBtn)
                 ) {
@@ -212,7 +216,9 @@ fun LoginScreen(
                         color = ChocolateBrown,
                         fontWeight = FontWeight.Bold,
                         textDecoration = TextDecoration.Underline,
-                        modifier = Modifier.clickable { onSignupClick() }
+                        modifier = Modifier
+                            .clickable { onSignupClick() }
+                            .testTag("registerBtn")
                     )
                 }
             }

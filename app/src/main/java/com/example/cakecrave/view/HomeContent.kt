@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,7 +48,9 @@ fun HomeContent(
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
-        modifier = modifier.padding(horizontal = 16.dp),
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .testTag("productList"),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(bottom = 80.dp)
@@ -84,9 +87,11 @@ fun HomeContent(
                 items = filteredProducts,
                 key = { it.id }
             ) { product ->
+                val index = filteredProducts.indexOf(product)
                 ProductGridCard(
                     product = product,
                     favoritesViewModel = favoritesViewModel,
+                    index = index,
                     onAddClick = {
                         // ✅ NAVIGATE TO PRODUCT DETAILS
                         navController.navigate(
@@ -103,6 +108,7 @@ fun HomeContent(
 private fun ProductGridCard(
     product: ProductModel,
     favoritesViewModel: FavoritesViewModel,
+    index: Int = 0,
     onAddClick: () -> Unit                // ✅ ADDED
 ) {
     val context = LocalContext.current
@@ -110,7 +116,8 @@ private fun ProductGridCard(
     Card(
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF2EFF5))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF2EFF5)),
+        modifier = Modifier.testTag("productItem_$index")
     ) {
         Column(
             modifier = Modifier.padding(12.dp)
@@ -171,7 +178,9 @@ private fun ProductGridCard(
 
                 FloatingActionButton(
                     onClick = onAddClick,     // ✅ FIXED
-                    modifier = Modifier.size(34.dp),
+                    modifier = Modifier
+                        .size(34.dp)
+                        .testTag("openDetails_$index"),
                     containerColor = Color(0xFFFF7A00),
                     elevation = FloatingActionButtonDefaults.elevation(4.dp)
                 ) {

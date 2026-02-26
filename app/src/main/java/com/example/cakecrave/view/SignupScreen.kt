@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -109,13 +110,13 @@ fun SignupScreen(
             // ================= FORM =================
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-                InputField("Full name", name) { name = it }
+                InputField("Full name", name, { name = it }, Modifier.testTag("name"))
                 Spacer(modifier = Modifier.height(12.dp))
-                InputField("Email address", email) { email = it }
+                InputField("Email address", email, { email = it }, Modifier.testTag("regEmail"))
                 Spacer(modifier = Modifier.height(12.dp))
-                PasswordField("Password", password) { password = it }
+                PasswordField("Password", password, { password = it }, Modifier.testTag("regPassword"))
                 Spacer(modifier = Modifier.height(12.dp))
-                PasswordField("Confirm password", confirmPassword) { confirmPassword = it }
+                PasswordField("Confirm password", confirmPassword, { confirmPassword = it })
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -154,7 +155,8 @@ fun SignupScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
+                        .height(56.dp)
+                        .testTag("createAccountBtn"),
                     shape = RoundedCornerShape(50.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = OrangeBtn)
                 ) {
@@ -189,14 +191,15 @@ fun SignupScreen(
 private fun InputField(
     placeholder: String,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = { Text(placeholder, color = HintBrown) },
         singleLine = true,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp)),
         colors = OutlinedTextFieldDefaults.colors(
@@ -214,7 +217,8 @@ private fun InputField(
 private fun PasswordField(
     placeholder: String,
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
         value = value,
@@ -222,7 +226,7 @@ private fun PasswordField(
         placeholder = { Text(placeholder, color = HintBrown) },
         singleLine = true,
         visualTransformation = PasswordVisualTransformation(),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp)),
         colors = OutlinedTextFieldDefaults.colors(

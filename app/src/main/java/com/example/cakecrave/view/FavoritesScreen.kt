@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -70,7 +71,8 @@ fun FavoritesScreen(
             ) {
                 Text(
                     text = "No favorite items yet",
-                    color = Color.Gray
+                    color = Color.Gray,
+                    modifier = Modifier.testTag("emptyFavText")
                 )
             }
         } else {
@@ -78,13 +80,16 @@ fun FavoritesScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
+                    .testTag("favoritesList")
             ) {
                 items(
                     items = favorites,
                     key = { it.productId }
                 ) { item ->
+                    val index = favorites.indexOf(item)
                     FavoriteItemCard(
                         item = item,
+                        index = index,
                         onDelete = {
                             favoritesViewModel.deleteFavorite(item.productId)
                         },
@@ -104,13 +109,15 @@ fun FavoritesScreen(
 @Composable
 private fun FavoriteItemCard(
     item: FavoriteItem,
+    index: Int = 0,
     onDelete: () -> Unit,
     onAddClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .testTag("favItem_$index"),
         shape = RoundedCornerShape(18.dp),
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF2EFF5))
@@ -158,7 +165,10 @@ private fun FavoriteItemCard(
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            IconButton(onClick = onDelete) {
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.testTag("removeFav_$index")
+            ) {
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "Remove favorite",

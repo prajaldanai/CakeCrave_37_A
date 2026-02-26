@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -171,7 +172,10 @@ fun ProductDetailRoute(
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.testTag("detailBack")
+                    ) {
                         Icon(Icons.Default.ArrowBack, contentDescription = null)
                     }
 
@@ -213,7 +217,8 @@ fun ProductDetailRoute(
                     Text(
                         text = product.name,
                         fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.testTag("detailTitle")
                     )
 
                     Text(
@@ -229,7 +234,8 @@ fun ProductDetailRoute(
                         text = "₹ ${product.price}",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFF7A00)
+                        color = Color(0xFFFF7A00),
+                        modifier = Modifier.testTag("detailPrice")
                     )
 
                     Row(
@@ -252,6 +258,7 @@ fun ProductDetailRoute(
                                 modifier = Modifier
                                     .size(36.dp)
                                     .background(Color(0xFFF1F1F1), CircleShape)
+                                    .testTag("qtyMinus")
                             ) {
                                 Icon(Icons.Default.Remove, null)
                             }
@@ -260,7 +267,9 @@ fun ProductDetailRoute(
                                 text = quantity.toString(),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 14.dp)
+                                modifier = Modifier
+                                    .padding(horizontal = 14.dp)
+                                    .testTag("qtyText")
                             )
 
                             IconButton(
@@ -268,6 +277,7 @@ fun ProductDetailRoute(
                                 modifier = Modifier
                                     .size(36.dp)
                                     .background(Color(0xFFFF7A00), CircleShape)
+                                    .testTag("qtyPlus")
                             ) {
                                 Icon(Icons.Default.Add, null, tint = Color.White)
                             }
@@ -306,7 +316,9 @@ fun ProductDetailRoute(
                 Button(
                     onClick = { showConfirmDialog = true },
                     shape = RoundedCornerShape(30.dp),
-                    modifier = Modifier.height(52.dp),
+                    modifier = Modifier
+                        .height(52.dp)
+                        .testTag("detailOrderNow"),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFF7A00)
                     )
