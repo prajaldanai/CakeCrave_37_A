@@ -10,9 +10,9 @@ import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class ProductViewModel : ViewModel() {
-
-    private val repository = ProductRepository()
+class ProductViewModel(
+    private val repository: ProductRepository = ProductRepository()
+) : ViewModel() {
 
     // ================= PRODUCTS =================
     private val _products = MutableStateFlow<List<ProductModel>>(emptyList())

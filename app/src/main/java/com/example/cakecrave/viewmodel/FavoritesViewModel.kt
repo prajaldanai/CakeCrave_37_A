@@ -6,9 +6,9 @@ import com.example.cakecrave.repository.FavoriteRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class FavoritesViewModel : ViewModel() {
-
-    private val repo = FavoriteRepository()
+class FavoritesViewModel(
+    private val repo: FavoriteRepository = FavoriteRepository()
+) : ViewModel() {
 
     private val _favorites = MutableStateFlow<List<FavoriteItem>>(emptyList())
     val favorites: StateFlow<List<FavoriteItem>> = _favorites

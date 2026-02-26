@@ -13,7 +13,7 @@ import com.google.firebase.database.*
 import java.io.InputStream
 import java.util.concurrent.Executors
 
-class ProductRepository {
+open class ProductRepository {
 
     // ================= FIREBASE DB =================
     private val dbRef: DatabaseReference =
@@ -47,7 +47,7 @@ class ProductRepository {
     }
 
     // ================= ADD PRODUCT =================
-    fun addProduct(
+    open fun addProduct(
         name: String,
         price: Double,
         description: String,
@@ -69,18 +69,18 @@ class ProductRepository {
     }
 
     // ================= UPDATE PRODUCT =================
-    fun updateProduct(product: ProductModel) {
+    open fun updateProduct(product: ProductModel) {
         dbRef.child(product.id).setValue(product)
     }
 
     // ================= DELETE PRODUCT =================
-    fun deleteProduct(productId: String) {
+    open fun deleteProduct(productId: String) {
         dbRef.child(productId).removeValue()
     }
 
     // ================= UPLOAD IMAGE TO CLOUDINARY =================
     // ✅ NO Context parameter anymore
-    fun uploadImage(
+    open fun uploadImage(
         imageUri: Uri,
         callback: (String?) -> Unit
     ) {

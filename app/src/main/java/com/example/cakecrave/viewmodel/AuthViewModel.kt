@@ -6,9 +6,9 @@ import kotlinx.coroutines.flow.StateFlow
 import com.example.cakecrave.repository.AuthRepository
 import com.example.cakecrave.repository.FirebaseAuthRepository
 
-class AuthViewModel : ViewModel() {
-
+class AuthViewModel(
     private val repository: AuthRepository = FirebaseAuthRepository()
+) : ViewModel() {
 
     // ================= LOGIN STATE =================
     private val _loginSuccess = MutableStateFlow(false)

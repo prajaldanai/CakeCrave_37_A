@@ -13,7 +13,7 @@ import com.google.firebase.database.*
 import java.io.InputStream
 import java.util.concurrent.Executors
 
-class ProfileRepository {
+open class ProfileRepository {
 
     // ================= FIREBASE =================
     private val db =
@@ -31,7 +31,7 @@ class ProfileRepository {
     )
 
     // ================= OBSERVE PROFILE =================
-    fun observeProfile(
+    open fun observeProfile(
         userId: String,
         onResult: (UserProfile) -> Unit,
         onError: (String) -> Unit
@@ -53,7 +53,7 @@ class ProfileRepository {
     }
 
     // ================= SAVE PROFILE =================
-    fun saveProfile(
+    open fun saveProfile(
         userId: String,
         profile: UserProfile,
         onSuccess: () -> Unit,
@@ -68,7 +68,7 @@ class ProfileRepository {
     }
 
     // ================= UPLOAD PROFILE IMAGE =================
-    fun uploadProfileImage(
+    open fun uploadProfileImage(
         context: Context,
         imageUri: Uri,
         callback: (String?) -> Unit
