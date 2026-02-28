@@ -42,7 +42,12 @@ fun AppNavGraph(
                     }
                 },
                 onSignupClick = { navController.navigate(Routes.SIGNUP) },
-                onForgotPassword = { navController.navigate(Routes.FORGOT_PASSWORD) }
+                onForgotPassword = {
+                    // Guard: only navigate if we're still on LOGIN
+                    if (navController.currentDestination?.route == Routes.LOGIN) {
+                        navController.navigate(Routes.FORGOT_PASSWORD)
+                    }
+                }
             )
         }
 
@@ -55,6 +60,18 @@ fun AppNavGraph(
                     }
                 },
                 onLoginClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.FORGOT_PASSWORD) {
+            ForgotPasswordScreen(
+                viewModel = authViewModel,
+                onEmailSent = {
+                    navController.popBackStack()
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
             )
         }
 

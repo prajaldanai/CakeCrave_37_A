@@ -23,18 +23,9 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            Log.d("DEBUG_FLOW", " setContent started")
-
             CakeCraveTheme {
-
-                Log.d("DEBUG_FLOW", " Theme applied")
-
                 val navController = rememberNavController()
-                Log.d("DEBUG_FLOW", " NavController created")
-
                 AppNavGraph(navController = navController)
-
-                Log.d("DEBUG_FLOW", " AppNavGraph rendered")
             }
 
         }

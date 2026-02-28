@@ -163,7 +163,9 @@ fun LoginScreen(
                         text = "Forgot password?",
                         fontSize = 14.sp,
                         color = ChocolateBrown,
-                        modifier = Modifier.clickable { onForgotPassword() }
+                        modifier = Modifier
+                            .clickable { onForgotPassword() }
+                            .padding(vertical = 8.dp, horizontal = 4.dp)
                     )
                 }
 
