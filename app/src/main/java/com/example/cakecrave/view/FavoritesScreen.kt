@@ -128,7 +128,8 @@ private fun FavoriteItemCard(
         ) {
 
             AsyncImage(
-                model = item.imageUrl,
+                model = item.imageUrl.replace("http://", "https://")
+                    .takeIf { it.isNotBlank() },
                 contentDescription = item.name,
                 modifier = Modifier
                     .size(80.dp)

@@ -133,7 +133,9 @@ fun AccountScreen(
 
                 // ================= PROFILE IMAGE ================= added
                 AsyncImage(
-                    model = selectedImageUri ?: photoUrl.takeIf { it.isNotBlank() },
+                    model = selectedImageUri
+                        ?: photoUrl.replace("http://", "https://")
+                            .takeIf { it.isNotBlank() },
                     contentDescription = "Profile Photo",
                     modifier = Modifier
                         .size(140.dp)

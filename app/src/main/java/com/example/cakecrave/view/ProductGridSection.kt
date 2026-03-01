@@ -1,7 +1,7 @@
 package com.example.cakecrave.view
 
 import android.widget.Toast
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -10,12 +10,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -24,10 +26,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
+import coil3.request.ImageRequest
 import com.example.cakecrave.model.ProductModel
 import com.example.cakecrave.model.FavoriteItem
 import com.example.cakecrave.viewmodel.FavoritesViewModel
 import com.example.cakecrave.navigation.Routes
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProductGridSection(
@@ -59,6 +65,8 @@ fun ProductCard(
     navController: NavHostController
 ) {
     val context = LocalContext.current
+    var showHeart by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -75,33 +83,60 @@ fun ProductCard(
                     .height(150.dp)
             ) {
 
-                // ✅ IMAGE — DOUBLE TAP ONLY
-                AsyncImage(
-                    model = product.imageUrl.takeIf { it.isNotBlank() },
-                    contentDescription = product.name,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(16.dp))
-                        .combinedClickable(
-                            onClick = {}, // 👈 DO NOTHING (IMPORTANT)
-                            onDoubleClick = {
-                                favoritesViewModel.addToFavorites(
-                                    FavoriteItem(
-                                        productId = product.id,
-                                        name = product.name,
-                                        price = product.price,
-                                        imageUrl = product.imageUrl
-                                    )
+                // ✅ IMAGE — DOUBLE TAP using pointerInput (reliable)
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalPlatformContext.current)
+                            .data(
+                                product.imageUrl
+                                    .takeIf { it.isNotBlank() }
+                                    ?.replace("http://", "https://")
+                            )
+                            .build(),
+                        contentDescription = product.name,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(16.dp))
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onDoubleTap = {
+                                        favoritesViewModel.addToFavorites(
+                                            FavoriteItem(
+                                                productId = product.id,
+                                                name = product.name,
+                                                price = product.price,
+                                                imageUrl = product.imageUrl
+                                            )
+                                        )
+                                        showHeart = true
+                                        scope.launch {
+                                            delay(900)
+                                            showHeart = false
+                                        }
+                                        Toast.makeText(
+                                            context,
+                                            "${product.name} added to favorites ❤️",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                                 )
-                                Toast.makeText(
-                                    context,
-                                    "Added to favorites ❤️",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        ),
-                    contentScale = ContentScale.Crop
-                )
+                            },
+                        contentScale = ContentScale.Crop
+                    )
+
+                    // ❤️ heart animation overlay
+                    if (showHeart) {
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = "Favorited",
+                            tint = Color.Red.copy(alpha = 0.85f),
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                }
 
                 // ✅ PLUS BUTTON — NOW GUARANTEED TO WORK
                 FloatingActionButton(

@@ -9,7 +9,7 @@ import org.junit.Test
 
 class AuthViewModelSignupTest {
 
-    // ========== FAKE REPOSITORY (no Mockito needed) ==========
+
     private class FakeAuthRepository(
         private val shouldSucceed: Boolean,
         private val fakeMessage: String

@@ -35,7 +35,12 @@ open class ProductRepository {
                 val list = mutableListOf<ProductModel>()
                 for (child in snapshot.children) {
                     val product = child.getValue(ProductModel::class.java)
-                    if (product != null) list.add(product)
+                    if (product != null) {
+                        // ✅ Fix old HTTP URLs → HTTPS so Coil/Android can load them
+                        list.add(product.copy(
+                            imageUrl = product.imageUrl.ensureHttps()
+                        ))
+                    }
                 }
                 onResult(list)
             }
@@ -44,6 +49,12 @@ open class ProductRepository {
                 // Optional logging
             }
         })
+    }
+
+    // ================= URL HELPER =================
+    /** Converts http:// Cloudinary URLs to https:// */
+    private fun String.ensureHttps(): String {
+        return if (startsWith("http://")) replace("http://", "https://") else this
     }
 
     // ================= ADD PRODUCT =================

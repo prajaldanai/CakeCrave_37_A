@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
+import coil3.request.ImageRequest
 import com.example.cakecrave.model.OrderModel
 import com.example.cakecrave.viewmodel.OrderViewModel
 import com.example.cakecrave.viewmodel.ProductViewModel
@@ -193,7 +195,13 @@ fun ProductDetailRoute(
 
             item {
                 AsyncImage(
-                    model = product.imageUrl,
+                    model = ImageRequest.Builder(LocalPlatformContext.current)
+                        .data(
+                            product.imageUrl
+                                .takeIf { it.isNotBlank() }
+                                ?.replace("http://", "https://")
+                        )
+                        .build(),
                     contentDescription = product.name,
                     modifier = Modifier
                         .fillMaxWidth()

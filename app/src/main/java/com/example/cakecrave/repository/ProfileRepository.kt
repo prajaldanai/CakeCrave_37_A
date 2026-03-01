@@ -43,13 +43,21 @@ open class ProfileRepository {
                     val profile =
                         snapshot.getValue(UserProfile::class.java)
                             ?: UserProfile()
-                    onResult(profile)
+                    // ✅ Fix old HTTP URLs → HTTPS so Coil/Android can load them
+                    onResult(profile.copy(
+                        photoUrl = profile.photoUrl.ensureHttps()
+                    ))
                 }
 
                 override fun onCancelled(error: DatabaseError) {
                     onError(error.message)
                 }
             })
+    }
+
+    /** Converts http:// Cloudinary URLs to https:// */
+    private fun String.ensureHttps(): String {
+        return if (startsWith("http://")) replace("http://", "https://") else this
     }
 
     // ================= SAVE PROFILE =================
@@ -97,7 +105,11 @@ open class ProfileRepository {
                     )
                 )
 
-                var imageUrl = response["url"] as String?
+                var imageUrl =
+                    (response["secure_url"] as String?)
+                        ?: (response["url"] as String?)
+
+                // Ensure HTTPS even if secure_url wasn't returned
                 imageUrl = imageUrl?.replace("http://", "https://")
 
                 Handler(Looper.getMainLooper()).post {

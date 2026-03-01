@@ -32,7 +32,8 @@ fun DashboardHeader(
 
         // ✅ Profile Image   profile image is added
         AsyncImage(
-            model = profile.photoUrl.takeIf { it.isNotBlank() },
+            model = profile.photoUrl.replace("http://", "https://")
+                .takeIf { it.isNotBlank() },
             contentDescription = "Profile Photo",
             modifier = Modifier
                 .size(54.dp)

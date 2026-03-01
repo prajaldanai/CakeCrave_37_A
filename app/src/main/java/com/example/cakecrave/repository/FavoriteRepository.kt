@@ -25,6 +25,9 @@ open class FavoriteRepository {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val list = snapshot.children.mapNotNull {
                     it.getValue(FavoriteItem::class.java)
+                }.map { item ->
+                    // ✅ Fix old HTTP URLs → HTTPS so Coil/Android can load them
+                    item.copy(imageUrl = item.imageUrl.ensureHttps())
                 }
                 onResult(list)
             }
@@ -35,5 +38,10 @@ open class FavoriteRepository {
 
     open fun removeFromFavorites(productId: String) {
         favRef()?.child(productId)?.removeValue()
+    }
+
+    /** Converts http:// Cloudinary URLs to https:// */
+    private fun String.ensureHttps(): String {
+        return if (startsWith("http://")) replace("http://", "https://") else this
     }
 }

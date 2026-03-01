@@ -123,7 +123,9 @@ private fun AddEditProductSheet(
             }
 
             item {
-                val preview = selectedImageUri ?: product?.imageUrl
+                val preview: Any? = selectedImageUri
+                    ?: product?.imageUrl?.replace("http://", "https://")
+                        ?.takeIf { it.isNotBlank() }
                 preview?.let {
                     AsyncImage(
                         model = it,
@@ -321,7 +323,8 @@ private fun ProductRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = product.imageUrl,
+                model = product.imageUrl.replace("http://", "https://")
+                    .takeIf { it.isNotBlank() },
                 contentDescription = null,
                 modifier = Modifier
                     .size(70.dp)

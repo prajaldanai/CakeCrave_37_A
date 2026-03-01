@@ -7,15 +7,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * Instrumented UI tests for CakeCrave Login & Signup screens.
- *
- * These tests run on an emulator/device using Jetpack Compose testing APIs.
- * No real Firebase calls are needed — we only verify UI behaviour.
- *
- * The app starts at WelcomeScreen, so each test first navigates:
- *   WelcomeScreen → LoginScreen
- */
+
 @RunWith(AndroidJUnit4::class)
 class LoginInstrumentedTest {
 
